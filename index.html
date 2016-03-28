@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>0/56</title>
+  <script type="text/javascript">
+    var cells = Array.from(
+      {length: 20},
+      function () { return Array.from(
+        {length: 10},
+        function () {return Math.random() > 0.5}
+      ) }
+    )
+
+    var nodes = {}
+    var nodes2 = {}
+    window.stack = []
+    var pointsCounter = 0
+    var clicksRemains = parseInt(cells.length * cells[0].length / 3) - 10
+
+    function _for (e) {
+      var size = parseInt((Date.now() - e.timestamp) / 50)
+
+      var minY = clicksRemains ? Math.max(0, e.y - size) : 0
+      var maxY = clicksRemains ? Math.min(e.y + size + 1, cells[0].length) : cells[0].length
+      var x, y, anyRedraw
+
+      var state = Math.random() > 0.5
+
+      x = e.x - size
+
+      document.getElementById('points').textContent = `${pointsCounter}/${clicksRemains}`
+
+      if (x == e.x) {
+        for (y = 0; y < cells.length; y++) {
+          anyRedraw = anyRedraw || true
+          if (cells[x][y] === 2) {
+            nodes[`${x},${y}`].setAttribute('fill', 'green')
+            nodes2[`${x},${y}`].setAttribute('fill', 'green')
+            nodes2[`${x},${y}`].setAttribute('opacity', '0.5')
+          }
+        }
+
+        return anyRedraw
+      }
+
+      if (x >= 0) {
+        for (y = minY; y < maxY; y++) {
+          anyRedraw = anyRedraw || true
+          if (cells[x][y] !== 2) {
+            cells[x][y] = Math.random() > 0.5
+            nodes[`${x},${y}`].setAttribute('fill', cells[x][y] ? 'black' : 'none')
+            nodes2[`${x},${y}`].setAttribute('fill', cells[x][y] ? 'black' : 'transparent')
+          } else {
+            nodes[`${x},${y}`].setAttribute(
+              'fill', (Math.random() > 0.5 || !clicksRemains) ? 'green' : 'none'
+            )
+          }
+        }
+      }
+
+      x = e.x + size
+      if (x < cells.length) {
+        for (y = minY; y < maxY; y++) {
+          anyRedraw = anyRedraw || true
+          if (cells[x][y] !== 2) {
+            cells[x][y] = Math.random() > 0.5
+            nodes[`${x},${y}`].setAttribute('fill', cells[x][y] ? 'black' : 'none')
+            nodes2[`${x},${y}`].setAttribute('fill', cells[x][y] ? 'black' : 'transparent')
+          } else {
+            nodes[`${x},${y}`].setAttribute(
+              'fill', (Math.random() > 0.5 || !clicksRemains) ? 'green' : 'none'
+            )
+          }
+        }
+      }
+
+      return anyRedraw
+    }
+
+    function refresh () {
+      var newStack = []
+      for (var event of window.stack) {
+        if (_for(event)) {
+          newStack.push(event)
+        }
+      }
+
+      window.stack = newStack
+      if (window.stack.length) {
+        window.requestAnimationFrame(refresh)
+      }
+    }
+
+    function ripple (event) {
+      var x = parseInt(event.target.dataset.x)
+      var y = parseInt(event.target.dataset.y)
+
+      if (cells[x][y] !== 2 && clicksRemains) {
+        clicksRemains--
+        window.stack = window.stack.concat([{
+          x: x, y: y, timestamp: Date.now(),
+        }])
+      }
+
+      if (
+        cells[x][y] == cells[x][y-1]
+        && cells[x][y] == cells[x][y+1]
+        && cells[x][y] !== 2
+      ) {
+        pointsCounter = pointsCounter + 3
+        cells[x][y] = cells[x][y-1] = cells[x][y+1] = 2
+      }
+
+      if (clicksRemains > -1) {
+        refresh()
+      }
+
+      if (clicksRemains <= 0) {
+        document.body.style.backgroundColor = 'red'
+      }
+    }
+
+    function highlight (event) {
+      var border = 'black'
+      var x = parseInt(event.target.dataset.x)
+      var y = parseInt(event.target.dataset.y)
+
+      if (
+        event.type == 'mouseleave'
+        || cells[x][y] === 2
+        || cells[x][y-1] === 2
+        || cells[x][y+1] === 2
+        || !clicksRemains
+      ) {
+        cells[x][y] !== undefined ? nodes2[`${x},${y}`].removeAttribute('stroke') : null
+        cells[x][y-1] !== undefined ? nodes2[`${x},${y-1}`].removeAttribute('stroke') : null
+        cells[x][y+1] !== undefined ? nodes2[`${x},${y+1}`].removeAttribute('stroke') : null
+      } else if (
+        cells[x][y] !== undefined
+        && cells[x][y-1] !== undefined
+        && cells[x][y+1] !== undefined
+      ) {
+        nodes2[`${x},${y}`].setAttribute('stroke', 'black')
+        nodes2[`${x},${y}`].setAttribute('stroke-dashoffset', '1')
+        nodes2[`${x},${y}`].setAttribute('stroke-dasharray', '1,1')
+        nodes2[`${x},${y-1}`].setAttribute('stroke', 'black')
+        nodes2[`${x},${y-1}`].setAttribute('stroke-dashoffset', '1')
+        nodes2[`${x},${y-1}`].setAttribute('stroke-dasharray', '3,1')
+        nodes2[`${x},${y+1}`].setAttribute('stroke', 'black')
+        nodes2[`${x},${y+1}`].setAttribute('stroke-dashoffset', '3')
+        nodes2[`${x},${y+1}`].setAttribute('stroke-dasharray', '3,1')
+      }
+
+    }
+
+    window.render = function render () {
+      var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svg.setAttribute('viewBox', `0 0 ${cells.length} ${cells[0].length}`)
+      // svg.setAttribute('width', 800)
+      // svg.setAttribute('height', 420)
+
+      var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs')
+      var pointsMask = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath')
+      pointsMask.id = 'pointsMask'
+      var points = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+      points.id = 'points'
+      points.textContent = `${pointsCounter}/${clicksRemains}`
+      points.setAttribute('y', '50%')
+      points.setAttribute('font-family', 'monospace')
+      points.setAttribute('font-size', cells.length * 0.25)
+      pointsMask.appendChild(points)
+      defs.appendChild(pointsMask)
+      svg.appendChild(defs)
+
+      var c
+      var row
+      var cell
+      for (var i = 0; i < cells.length; i++) {
+        for (var j = 0; j < cells[0].length; j++) {
+          c = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+          c.setAttribute('width', 1)
+          c.setAttribute('height', 1)
+          c.setAttribute('x', i)
+          c.setAttribute('y', j)
+          c.setAttribute('fill', cells[i][j] ? 'black' : 'none')
+          c.setAttribute('clip-path', 'url(#pointsMask)')
+
+          c2 = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+          c2.setAttribute('width', 1)
+          c2.setAttribute('height', 1)
+          c2.setAttribute('x', i)
+          c2.setAttribute('data-x', i)
+          c2.setAttribute('y', j)
+          c2.setAttribute('data-y', j)
+          c2.setAttribute('fill', cells[i][j] ? 'black' : 'transparent')
+          c2.setAttribute('opacity', '0.1')
+          c2.setAttribute('stroke-width', '0.1')
+          c2.onclick = ripple
+          c2.onmouseenter = highlight
+          c2.onmouseleave = highlight
+
+          nodes[`${i},${j}`] = c
+          nodes2[`${i},${j}`] = c2
+          svg.appendChild(c)
+          svg.appendChild(c2)
+        }
+      }
+
+      document.body.appendChild(svg)
+    }
+  </script>
+</head>
+<body>
+  <script type="text/javascript">
+    window.render()
+  </script>
+</body>
+</html>
