@@ -4,7 +4,7 @@
   <title>0/56</title>
   <script type="text/javascript">
     var cells = Array.from(
-      {length: 20},
+      {length: 19},
       function () { return Array.from(
         {length: 10},
         function () {return Math.random() > 0.5}
@@ -15,7 +15,7 @@
     var nodes2 = {}
     window.stack = []
     var pointsCounter = 0
-    var clicksRemains = parseInt(cells.length * cells[0].length / 3) - 10
+    var clicksRemains = 56
 
     function _for (e) {
       var size = parseInt((Date.now() - e.timestamp) / 50)
@@ -48,11 +48,11 @@
           anyRedraw = anyRedraw || true
           if (cells[x][y] !== 2) {
             cells[x][y] = Math.random() > 0.5
-            nodes[`${x},${y}`].setAttribute('fill', cells[x][y] ? 'black' : 'none')
+            nodes[`${x},${y}`].setAttribute('opacity', cells[x][y] ? '1' : '0.2')
             nodes2[`${x},${y}`].setAttribute('fill', cells[x][y] ? 'black' : 'transparent')
           } else {
             nodes[`${x},${y}`].setAttribute(
-              'fill', (Math.random() > 0.5 || !clicksRemains) ? 'green' : 'none'
+              'opacity', (Math.random() > 0.5 || !clicksRemains) ? '1' : '0.2'
             )
           }
         }
@@ -64,11 +64,11 @@
           anyRedraw = anyRedraw || true
           if (cells[x][y] !== 2) {
             cells[x][y] = Math.random() > 0.5
-            nodes[`${x},${y}`].setAttribute('fill', cells[x][y] ? 'black' : 'none')
+            nodes[`${x},${y}`].setAttribute('opacity', cells[x][y] ? '1' : '0.2')
             nodes2[`${x},${y}`].setAttribute('fill', cells[x][y] ? 'black' : 'transparent')
           } else {
             nodes[`${x},${y}`].setAttribute(
-              'fill', (Math.random() > 0.5 || !clicksRemains) ? 'green' : 'none'
+              'opacity', (Math.random() > 0.5 || !clicksRemains) ? '1' : '0.2'
             )
           }
         }
@@ -182,7 +182,7 @@
           c.setAttribute('height', 1)
           c.setAttribute('x', i)
           c.setAttribute('y', j)
-          c.setAttribute('fill', cells[i][j] ? 'black' : 'none')
+          c.setAttribute('opacity', cells[i][j] ? '1' : '0.2')
           c.setAttribute('clip-path', 'url(#pointsMask)')
 
           c2 = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
