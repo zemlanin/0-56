@@ -28,12 +28,11 @@
 
       x = e.x - size
 
-      document.getElementById('points').textContent = `${pointsCounter}/${clicksRemains}`
-
       if (x == e.x) {
         for (y = 0; y < cells.length; y++) {
           anyRedraw = anyRedraw || true
-          if (cells[x][y] === 2) {
+          if (cells[x][y] === 2 && nodes[`${x},${y}`].dataset.timestamp !== e.timestamp) {
+            nodes[`${x},${y}`].dataset.timestamp = e.timestamp
             nodes[`${x},${y}`].setAttribute('fill', 'green')
             nodes2[`${x},${y}`].setAttribute('fill', 'green')
             nodes2[`${x},${y}`].setAttribute('opacity', '0.5')
@@ -46,11 +45,13 @@
       if (x >= 0) {
         for (y = minY; y < maxY; y++) {
           anyRedraw = anyRedraw || true
-          if (cells[x][y] !== 2) {
+          if (cells[x][y] !== 2 && nodes[`${x},${y}`].dataset.timestamp !== e.timestamp) {
             cells[x][y] = Math.random() > 0.5
+            nodes[`${x},${y}`].dataset.timestamp = e.timestamp
             nodes[`${x},${y}`].setAttribute('opacity', cells[x][y] ? '1' : '0.2')
             nodes2[`${x},${y}`].setAttribute('fill', cells[x][y] ? 'black' : 'transparent')
-          } else {
+          } else if (nodes[`${x},${y}`].dataset.timestamp !== e.timestamp) {
+            nodes[`${x},${y}`].dataset.timestamp = e.timestamp
             nodes[`${x},${y}`].setAttribute(
               'opacity', (Math.random() > 0.5 || !clicksRemains) ? '1' : '0.2'
             )
@@ -62,11 +63,13 @@
       if (x < cells.length) {
         for (y = minY; y < maxY; y++) {
           anyRedraw = anyRedraw || true
-          if (cells[x][y] !== 2) {
+          if (cells[x][y] !== 2 && nodes[`${x},${y}`].dataset.timestamp !== e.timestamp) {
             cells[x][y] = Math.random() > 0.5
+            nodes[`${x},${y}`].dataset.timestamp = e.timestamp
             nodes[`${x},${y}`].setAttribute('opacity', cells[x][y] ? '1' : '0.2')
             nodes2[`${x},${y}`].setAttribute('fill', cells[x][y] ? 'black' : 'transparent')
-          } else {
+          } else if (nodes[`${x},${y}`].dataset.timestamp !== e.timestamp) {
+            nodes[`${x},${y}`].dataset.timestamp = e.timestamp
             nodes[`${x},${y}`].setAttribute(
               'opacity', (Math.random() > 0.5 || !clicksRemains) ? '1' : '0.2'
             )
@@ -111,8 +114,10 @@
         cells[x][y] = cells[x][y-1] = cells[x][y+1] = 2
       }
 
+      document.getElementById('points').textContent = `${pointsCounter}/${clicksRemains}`
+
       if (clicksRemains > -1) {
-        refresh()
+        window.requestAnimationFrame(refresh)
       }
 
       if (clicksRemains <= 0) {
