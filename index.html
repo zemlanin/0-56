@@ -34,7 +34,7 @@
         : 0
       var newEvent = Object.assign({}, e, {prevDraw: now})
 
-      if (e.x - alreadyDrawn < 0 && e.x + alreadyDrawn > cells.length) { return null }
+      if (alreadyDrawn && e.x - alreadyDrawn < 0 && e.x + alreadyDrawn > cells.length) { return null }
 
       var x, y
       var minY, maxY
@@ -97,7 +97,6 @@
 
     function refresh () {
       window.stack = window.stack.map(_for).filter(function (x) { return !!x })
-      console.log(window.stack)
       if (window.stack.length) {
         window.requestAnimationFrame(refresh)
       }
