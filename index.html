@@ -18,77 +18,86 @@
     var clicksRemains = 56
 
     function _for (e) {
-      var size = parseInt((Date.now() - e.timestamp) / 50)
+      /**
+        horizon
+        |         alreadyDrawn
+        |         |            start ≈ e.timestamp
+        |         |            •
+        |         |
+        |
+      */
 
-      var minY = clicksRemains ? Math.max(0, e.y - size) : 0
-      var maxY = clicksRemains ? Math.min(e.y + size + 1, cells[0].length) : cells[0].length
-      var x, y, anyRedraw
+      var now = Date.now()
+      var horizon = parseInt((now - e.timestamp) / 50)
+      var alreadyDrawn = e.prevDraw !== undefined
+        ? parseInt((e.prevDraw - e.timestamp) / 50)
+        : 0
+      var newEvent = Object.assign({}, e, {prevDraw: now})
 
-      var state = Math.random() > 0.5
+      if (e.x - alreadyDrawn < 0 && e.x + alreadyDrawn > cells.length) { return null }
 
-      x = e.x - size
+      var x, y
+      var minY, maxY
 
-      if (x == e.x) {
-        for (y = 0; y < cells.length; y++) {
-          anyRedraw = anyRedraw || true
-          if (cells[x][y] === 2 && nodes[`${x},${y}`].dataset.timestamp !== e.timestamp) {
-            nodes[`${x},${y}`].dataset.timestamp = e.timestamp
-            nodes[`${x},${y}`].setAttribute('fill', 'green')
-            nodes2[`${x},${y}`].setAttribute('fill', 'green')
-            nodes2[`${x},${y}`].setAttribute('opacity', '0.5')
+      for (var size = alreadyDrawn; size <= horizon; size++) {
+        minY = clicksRemains ? Math.max(0, e.y - size) : 0
+        maxY = clicksRemains ? Math.min(e.y + size + 1, cells[0].length) : cells[0].length
+
+        x = e.x - size
+
+        if (x == e.x) {
+          for (y = 0; y < cells.length; y++) {
+            if (cells[x][y] === 2 && nodes[`${x},${y}`].dataset.timestamp !== e.timestamp) {
+              nodes[`${x},${y}`].dataset.timestamp = e.timestamp
+              nodes[`${x},${y}`].setAttribute('fill', 'green')
+              nodes2[`${x},${y}`].setAttribute('fill', 'green')
+              nodes2[`${x},${y}`].setAttribute('opacity', '0.5')
+            }
+          }
+
+          break
+        }
+
+        if (x >= 0) {
+          for (y = minY; y < maxY; y++) {
+            if (cells[x][y] !== 2 && nodes[`${x},${y}`].dataset.timestamp !== e.timestamp) {
+              cells[x][y] = Math.random() > 0.5
+              nodes[`${x},${y}`].dataset.timestamp = e.timestamp
+              nodes[`${x},${y}`].setAttribute('opacity', cells[x][y] ? '1' : '0.2')
+              nodes2[`${x},${y}`].setAttribute('fill', cells[x][y] ? 'black' : 'transparent')
+            } else if (nodes[`${x},${y}`].dataset.timestamp !== e.timestamp) {
+              nodes[`${x},${y}`].dataset.timestamp = e.timestamp
+              nodes[`${x},${y}`].setAttribute(
+                'opacity', (Math.random() > 0.5 || !clicksRemains) ? '1' : '0.2'
+              )
+            }
           }
         }
 
-        return anyRedraw
-      }
-
-      if (x >= 0) {
-        for (y = minY; y < maxY; y++) {
-          anyRedraw = anyRedraw || true
-          if (cells[x][y] !== 2 && nodes[`${x},${y}`].dataset.timestamp !== e.timestamp) {
-            cells[x][y] = Math.random() > 0.5
-            nodes[`${x},${y}`].dataset.timestamp = e.timestamp
-            nodes[`${x},${y}`].setAttribute('opacity', cells[x][y] ? '1' : '0.2')
-            nodes2[`${x},${y}`].setAttribute('fill', cells[x][y] ? 'black' : 'transparent')
-          } else if (nodes[`${x},${y}`].dataset.timestamp !== e.timestamp) {
-            nodes[`${x},${y}`].dataset.timestamp = e.timestamp
-            nodes[`${x},${y}`].setAttribute(
-              'opacity', (Math.random() > 0.5 || !clicksRemains) ? '1' : '0.2'
-            )
+        x = e.x + size
+        if (x < cells.length) {
+          for (y = minY; y < maxY; y++) {
+            if (cells[x][y] !== 2 && nodes[`${x},${y}`].dataset.timestamp !== e.timestamp) {
+              cells[x][y] = Math.random() > 0.5
+              nodes[`${x},${y}`].dataset.timestamp = e.timestamp
+              nodes[`${x},${y}`].setAttribute('opacity', cells[x][y] ? '1' : '0.2')
+              nodes2[`${x},${y}`].setAttribute('fill', cells[x][y] ? 'black' : 'transparent')
+            } else if (nodes[`${x},${y}`].dataset.timestamp !== e.timestamp) {
+              nodes[`${x},${y}`].dataset.timestamp = e.timestamp
+              nodes[`${x},${y}`].setAttribute(
+                'opacity', (Math.random() > 0.5 || !clicksRemains) ? '1' : '0.2'
+              )
+            }
           }
         }
       }
 
-      x = e.x + size
-      if (x < cells.length) {
-        for (y = minY; y < maxY; y++) {
-          anyRedraw = anyRedraw || true
-          if (cells[x][y] !== 2 && nodes[`${x},${y}`].dataset.timestamp !== e.timestamp) {
-            cells[x][y] = Math.random() > 0.5
-            nodes[`${x},${y}`].dataset.timestamp = e.timestamp
-            nodes[`${x},${y}`].setAttribute('opacity', cells[x][y] ? '1' : '0.2')
-            nodes2[`${x},${y}`].setAttribute('fill', cells[x][y] ? 'black' : 'transparent')
-          } else if (nodes[`${x},${y}`].dataset.timestamp !== e.timestamp) {
-            nodes[`${x},${y}`].dataset.timestamp = e.timestamp
-            nodes[`${x},${y}`].setAttribute(
-              'opacity', (Math.random() > 0.5 || !clicksRemains) ? '1' : '0.2'
-            )
-          }
-        }
-      }
-
-      return anyRedraw
+      return newEvent
     }
 
     function refresh () {
-      var newStack = []
-      for (var event of window.stack) {
-        if (_for(event)) {
-          newStack.push(event)
-        }
-      }
-
-      window.stack = newStack
+      window.stack = window.stack.map(_for).filter(function (x) { return !!x })
+      console.log(window.stack)
       if (window.stack.length) {
         window.requestAnimationFrame(refresh)
       }
