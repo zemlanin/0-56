@@ -2,13 +2,21 @@
 <html>
 <head>
   <title>0/56</title>
+  <meta name="viewport" content="initial-scale=1.0, width=device-width">
   <script type="text/javascript">
+    var rand
+
+    function randomBit () {
+      if (!rand) { rand = Math.random() * Math.pow(2, 32) }
+      
+      var res = !!(rand & 1)
+      rand = rand >>> 1
+      return res
+    }
+
     var cells = Array.from(
       {length: 19},
-      function () { return Array.from(
-        {length: 10},
-        function () {return Math.random() > 0.5}
-      ) }
+      function () { return Array.from({length: 10}, randomBit) }
     )
 
     var nodes = {}
@@ -61,14 +69,14 @@
         if (x >= 0) {
           for (y = minY; y < maxY; y++) {
             if (cells[x][y] !== 2 && nodes[`${x},${y}`].dataset.timestamp !== e.timestamp) {
-              cells[x][y] = Math.random() > 0.5
+              cells[x][y] = randomBit()
               nodes[`${x},${y}`].dataset.timestamp = e.timestamp
               nodes[`${x},${y}`].setAttribute('opacity', cells[x][y] ? '1' : '0.2')
               nodes2[`${x},${y}`].setAttribute('fill', cells[x][y] ? 'black' : 'transparent')
             } else if (nodes[`${x},${y}`].dataset.timestamp !== e.timestamp) {
               nodes[`${x},${y}`].dataset.timestamp = e.timestamp
               nodes[`${x},${y}`].setAttribute(
-                'opacity', (Math.random() > 0.5 || !clicksRemains) ? '1' : '0.2'
+                'opacity', (randomBit() || !clicksRemains) ? '1' : '0.2'
               )
             }
           }
@@ -78,14 +86,14 @@
         if (x < cells.length) {
           for (y = minY; y < maxY; y++) {
             if (cells[x][y] !== 2 && nodes[`${x},${y}`].dataset.timestamp !== e.timestamp) {
-              cells[x][y] = Math.random() > 0.5
+              cells[x][y] = randomBit()
               nodes[`${x},${y}`].dataset.timestamp = e.timestamp
               nodes[`${x},${y}`].setAttribute('opacity', cells[x][y] ? '1' : '0.2')
               nodes2[`${x},${y}`].setAttribute('fill', cells[x][y] ? 'black' : 'transparent')
             } else if (nodes[`${x},${y}`].dataset.timestamp !== e.timestamp) {
               nodes[`${x},${y}`].dataset.timestamp = e.timestamp
               nodes[`${x},${y}`].setAttribute(
-                'opacity', (Math.random() > 0.5 || !clicksRemains) ? '1' : '0.2'
+                'opacity', (randomBit() || !clicksRemains) ? '1' : '0.2'
               )
             }
           }
